@@ -20,6 +20,7 @@ package com.forrestguice.suntimeswidget.alarmclock.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -550,31 +551,31 @@ public class AlarmEditActivity extends AppCompatActivity implements AlarmItemAda
     protected void onRingtoneResult(int resultCode, Intent data)
     {
         if (resultCode == RESULT_OK && editor != null && data != null) {
-            onRingtoneResult((Uri)(data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)), false);
+            onRingtoneResult(new Uri[] { (Uri)(data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)) }, false);
         } else {
             Log.d(TAG, "onActivityResult: bad result: " + resultCode + ", " + data);
         }
     }
-    protected void onRingtoneResult(final Uri uri, boolean isAudioFile)
+    protected void onRingtoneResult(final Uri[] uri, boolean isAudioFile)
     {
         final AlarmClockItem item = editor.getItem();
-        if (uri != null)
+        if (uri != null && uri.length > 0)
         {
-            Log.d(TAG, "onActivityResult: uri: " + uri);
-            Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
+            Log.d(TAG, "onActivityResult: # of uri: " + uri.length);
+            Ringtone ringtone = RingtoneManager.getRingtone(this, uri[0]);
             if (ringtone != null)
             {
                 ringtone.stop();
                 item.ringtoneName = ringtoneTitle(getContentResolver(), uri, ringtone, isAudioFile);
-                item.ringtoneURI = uri.toString();
+                item.ringtoneURI = encodeURIs(uri);
                 editor.notifyItemChanged();
-                Log.d(TAG, "onActivityResult: uri: " + item.ringtoneURI + ", title: " + item.ringtoneName);
+                Log.d(TAG, "onActivityResult: uri: " + item.ringtoneURI + ", title: " + item.ringtoneName + ", uri: " + item.ringtoneURI);
 
             } else {
                 item.ringtoneName = null;
                 item.ringtoneURI = null;
                 editor.notifyItemChanged();
-                Log.d(TAG, "onActivityResult: uri: " + uri + " <null ringtone>");
+                Log.d(TAG, "onActivityResult: uri: " + uri[0] + " <null ringtone>");
             }
 
         } else {
@@ -617,6 +618,25 @@ public class AlarmEditActivity extends AppCompatActivity implements AlarmItemAda
         return retValue;
     }
 
+    protected String ringtoneTitle(@NonNull ContentResolver resolver, @NonNull Uri[] uri, @NonNull Ringtone ringtone, boolean isAudioFile)
+    {
+        if (uri.length > 0)
+        {
+            StringBuilder result = new StringBuilder();
+            for (int i=0; i<uri.length; i++)
+            {
+                if (uri[i] != null)
+                {
+                    result.append(ringtoneTitle(resolver, uri[i], ringtone, isAudioFile));
+                    if (i != uri.length-1) {
+                        result.append(", ");
+                    }
+                }
+            }
+            return result.toString();
+        } else return null;
+    }
+
     protected void audioFilePicker(@NonNull AlarmClockItem item)
     {
         Intent intent;
@@ -625,7 +645,7 @@ public class AlarmEditActivity extends AppCompatActivity implements AlarmItemAda
             intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 
         } else {
             intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -642,17 +662,55 @@ public class AlarmEditActivity extends AppCompatActivity implements AlarmItemAda
 
     protected void onRingtoneResult1(int resultCode, Intent data)
     {
-        if (resultCode == RESULT_OK && editor != null && data != null && data.getData() != null)
+        if (resultCode == RESULT_OK && editor != null && data != null)
         {
+            ClipData clip = data.getClipData();
             Uri uri = data.getData();
-            if (Build.VERSION.SDK_INT >= 19) {
-                final int flags = data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION;
-                getContentResolver().takePersistableUriPermission(uri, flags);
+
+            if (clip != null && clip.getItemCount() > 0)            // multiple selections found in ClipData, single selection found in data Intent URI
+            {
+                Uri[] uris = new Uri[clip.getItemCount()];
+                for (int i=0; i<uris.length; i++) {
+                    uris[i] = clip.getItemAt(i).getUri();
+                    takePersistableUriPermission(getContentResolver(), uris[i], data.getFlags());
+                }
+                onRingtoneResult(uris, true);
+
+            } else if (uri != null) {
+                takePersistableUriPermission(getContentResolver(), uri, data.getFlags());
+                onRingtoneResult(new Uri[] { uri }, true);
+
+            } else {
+                Log.d(TAG, "onActivityResult: bad result: " + resultCode + ", " + data);
             }
-            onRingtoneResult(uri, true);
+
         } else {
             Log.d(TAG, "onActivityResult: bad result: " + resultCode + ", " + data);
         }
+    }
+
+    protected void takePersistableUriPermission(ContentResolver resolver, @NonNull Uri uri, int flags)
+    {
+        if (Build.VERSION.SDK_INT >= 19) {
+            if (resolver != null) {
+                resolver.takePersistableUriPermission(uri, (flags & Intent.FLAG_GRANT_READ_URI_PERMISSION));
+            }
+        }
+    }
+
+    protected String encodeURIs(@NonNull Uri[] uri) {
+        StringBuilder result = new StringBuilder();
+        for (int i=0; i<uri.length; i++)
+        {
+            if (uri[i] != null)
+            {
+                result.append(uri[i]);
+                if (i != uri.length-1) {
+                    result.append("\n");
+                }
+            }
+        }
+        return result.toString();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
