@@ -68,7 +68,9 @@ import com.forrestguice.suntimeswidget.settings.WidgetSettings;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
@@ -361,7 +363,13 @@ public class AlarmNotifications extends BroadcastReceiver
             startVibration(context, alarm);
         }
 
-        Uri soundUri = ((alarm.ringtoneURI != null && !alarm.ringtoneURI.isEmpty()) ? Uri.parse(alarm.ringtoneURI) : null);
+        ArrayList<String> soundURIs = ((alarm.ringtoneURI != null && !alarm.ringtoneURI.isEmpty())
+                ? new ArrayList<>(Arrays.asList(alarm.ringtoneURI.split("\\n"))) : null);
+        if (soundURIs != null) {
+            Collections.shuffle(soundURIs);
+        }
+        Uri soundUri = (soundURIs != null && soundURIs.size() > 0) ? Uri.parse(soundURIs.get(0)) : null;
+
         if (soundUri != null && passesFilter)
         {
             try {
