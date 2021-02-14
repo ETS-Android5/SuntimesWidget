@@ -232,7 +232,7 @@ public class AlarmDatabaseAdapter
     public int getAlarmCount(String soundUri)
     {
         int count = 0;
-        Cursor cursor = database.query(TABLE_ALARMS, QUERY_ALARMS_MINENTRY, KEY_ALARM_RINGTONE_URI + " = ?", new String[] { soundUri }, null, null, null);
+        Cursor cursor = database.query(TABLE_ALARMS, QUERY_ALARMS_MINENTRY, KEY_ALARM_RINGTONE_URI + " LIKE ?", new String[] { "%" + soundUri + "%" }, null, null, null);
         if (cursor != null) {
             count = cursor.getCount();
             cursor.close();
