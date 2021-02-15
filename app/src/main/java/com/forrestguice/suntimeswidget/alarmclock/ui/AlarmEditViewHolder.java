@@ -42,6 +42,7 @@ import com.forrestguice.suntimeswidget.settings.SolarEventIcons;
 import com.forrestguice.suntimeswidget.settings.SolarEvents;
 import com.forrestguice.suntimeswidget.settings.WidgetActions;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -376,8 +377,26 @@ public class AlarmEditViewHolder extends RecyclerView.ViewHolder
 
     public static CharSequence displayRingtone(Context context, AlarmClockItem item, boolean isSelected)
     {
-        final String noRingtone = context.getString(R.string.alarmOption_ringtone_none);
-        return (isSelected ? (item.ringtoneName != null ? item.ringtoneName : noRingtone) : "");
+        ArrayList<String> ringtoneURI = item.getRingtoneURIs();
+        boolean hasMultiple = (ringtoneURI != null && ringtoneURI.size() > 1);
+        if (hasMultiple && isSelected)
+        {
+            int[] attrs = { R.attr.text_disabledColor };
+            TypedArray a = context.obtainStyledAttributes(attrs);
+            int descColor = ContextCompat.getColor(context, a.getResourceId(0, R.color.text_disabled_dark));
+            a.recycle();
+
+            String ringtoneTag = context.getString(R.string.alarmOption_ringtone_random_tag, item.ringtoneName);
+            String ringtoneDisplay = context.getString(R.string.alarmOption_ringtone_random, ringtoneTag);
+            return SuntimesUtils.createColorSpan(SuntimesUtils.createRelativeSpan(null, ringtoneDisplay, ringtoneTag, 0.75f), ringtoneDisplay, ringtoneTag, descColor);
+
+        } else if (isSelected) {
+            final String noRingtone = context.getString(R.string.alarmOption_ringtone_none);
+            return (item.ringtoneName != null ? item.ringtoneName : noRingtone);
+
+        } else {
+            return "";
+        }
     }
 
     public static CharSequence displayAction(Context context, AlarmClockItem item, int actionNum)
