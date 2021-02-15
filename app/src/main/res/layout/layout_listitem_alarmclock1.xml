@@ -162,7 +162,7 @@
 
                             <TextView
                                 android:id="@+id/text_ringtone"
-                                style="@style/ChipText1"
+                                style="@style/ChipText1" android:maxWidth="175dp" android:maxLines="4"
                                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                                 android:button="@android:color/transparent"
                                 android:drawableLeft="?attr/icActionSoundDisabled" android:drawableStart="?attr/icActionSoundDisabled"
