@@ -363,8 +363,7 @@ public class AlarmNotifications extends BroadcastReceiver
             startVibration(context, alarm);
         }
 
-        ArrayList<String> soundURIs = ((alarm.ringtoneURI != null && !alarm.ringtoneURI.isEmpty())
-                ? new ArrayList<>(Arrays.asList(alarm.ringtoneURI.split("\\n"))) : null);
+        ArrayList<String> soundURIs = alarm.getRingtoneURIs();
         if (soundURIs != null) {
             Collections.shuffle(soundURIs);
         }

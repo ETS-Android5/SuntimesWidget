@@ -567,7 +567,7 @@ public class AlarmEditActivity extends AppCompatActivity implements AlarmItemAda
             {
                 ringtone.stop();
                 item.ringtoneName = ringtoneTitle(getContentResolver(), uri, ringtone, isAudioFile);
-                item.ringtoneURI = encodeURIs(uri);
+                item.ringtoneURI = AlarmClockItem.encodeRingtoneURIs(uri);
                 editor.notifyItemChanged();
                 Log.d(TAG, "onActivityResult: uri: " + item.ringtoneURI + ", title: " + item.ringtoneName + ", uri: " + item.ringtoneURI);
 
@@ -696,21 +696,6 @@ public class AlarmEditActivity extends AppCompatActivity implements AlarmItemAda
                 resolver.takePersistableUriPermission(uri, (flags & Intent.FLAG_GRANT_READ_URI_PERMISSION));
             }
         }
-    }
-
-    protected String encodeURIs(@NonNull Uri[] uri) {
-        StringBuilder result = new StringBuilder();
-        for (int i=0; i<uri.length; i++)
-        {
-            if (uri[i] != null)
-            {
-                result.append(uri[i]);
-                if (i != uri.length-1) {
-                    result.append("\n");
-                }
-            }
-        }
-        return result.toString();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

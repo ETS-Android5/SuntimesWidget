@@ -24,6 +24,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -421,6 +422,32 @@ public class AlarmClockItem implements Parcelable
                 repeatingDays.addAll(Arrays.asList(repeatingDaysArray));
             } else repeatingDays = null;
         } else repeatingDays = null;
+    }
+
+    /**
+     * @param uri an array of sound Uris
+     * @return an encoded String that can be set to alarmItem.ringtoneURI
+     */
+    public static String encodeRingtoneURIs(@NonNull Uri[] uri) {
+        StringBuilder result = new StringBuilder();
+        for (int i=0; i<uri.length; i++)
+        {
+            if (uri[i] != null)
+            {
+                result.append(uri[i]);
+                if (i != uri.length-1) {
+                    result.append("\n");
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    @Nullable
+    public ArrayList<String> getRingtoneURIs()
+    {
+        return ((ringtoneURI != null && !ringtoneURI.isEmpty())
+                ? new ArrayList<>(Arrays.asList(ringtoneURI.split("\\n"))) : null);
     }
 
     /**
